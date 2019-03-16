@@ -1,0 +1,11 @@
+##################################
+Raspb Time = 450
+Local Time = 03/14/2019 22:49:32
+##################################
+Default width: 650
+Default height: 450
+Default sharpness: 0
+Default brightness: 50
+Default contrast: 0
+Default saturation: 0
+Default ISO: 400

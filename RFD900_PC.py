@@ -2,7 +2,7 @@
 #   PC interface for RFD900_Pi_V7 over the RFD900 Modem using a baudrate of 57600   #
 #   to send photos and real time data. Constructed for MSGC Borealis program.       #
 #                                                                                   #
-#   Author: Dylan Trafford      Created: 1/19/2015     Python Version: 2.7.9        #
+#   Author: Dylan Trafford      Created: 1/19/2015     Python Version: 3.5          #
 #                               Edited: 6/16/2015      OS = Windows 8.1             #
 #####################################################################################
 
@@ -20,14 +20,16 @@ import base64                       # = encodes an image in b64 Strings (and dec
 import hashlib                      # = generates hashes
 import subprocess
 import sys
+from PIL import *
 import PIL.Image                    # = for image processing
-import ImageTk
-from Tkinter import *
-import tkMessageBox
+import PIL.ImageTk
+#import ImageTk
+from tkinter import *
+import tkinter.messagebox            #Check if necessary
 
         #Optional Libraries - Unused at current, can replace b64 encoding
 
-from StringIO import StringIO       # = for additional functionality, see io library 
+from io import StringIO       # = for additional functionality, see io library 
 from array import array             # = for generating a byte array 
 import os                           # = ?? was required for io module to convert Image to bytes
 import io                           # = creating a String or Byte Array of data (streaming images)
@@ -36,12 +38,12 @@ import io                           # = creating a String or Byte Array of data 
     #Global Variable Initialization and Definitions
 
 #Serial Variables
-port = "COM32"              #This is a computer dependent setting. Open Device Manager to determine which port the RFD900 Modem is plugged into
+port = "COM4"              #This is a computer dependent setting. Open Device Manager to determine which port the RFD900 Modem is plugged into
 baud = 38400
 timeout = 3                 #Sets the ser.read() timeout period, or when to continue in the code when no data is received after the timeout period (in seconds)
 
 #Initializations
-ser = serial.Serial(port = port, baudrate = baud, timeout = timeout)
+# ser = serial.Serial(port = port, baudrate = baud, timeout = timeout)
 wordlength = 10000          #Variable to determine spacing of checksum. Ex. wordlength = 1000 will send one thousand bits before calculating and verifying checksum
 imagedatasize = 10000
 extension = ".png"
@@ -77,15 +79,15 @@ def updateslider():
         saturationslide.set(saturation)
         isoslide.set(iso)
     except:
-        print "error setting slides to new values"
-        print "here are current values"
-        print width
-        print height
-        print sharpness
-        print brightness
-        print contrast
-        print saturation
-        print iso
+        print("error setting slides to new values")
+        print("here are current values")
+        print(width)
+        print(height)
+        print(sharpness)
+        print(brightness)
+        print(contrast)
+        print(saturation)
+        print(iso)
         sys.stdout.flush()
     try:
         if (timeupdateflag == 1):
@@ -101,15 +103,15 @@ def updateslider():
         saturationvar.set("Current Saturation = " + str(saturation))
         isovar.set("Current ISO = " + str(iso))
     except:
-        print "error setting slides to new values"
-        print "here are current values"
-        print width
-        print height
-        print sharpness
-        print brightness
-        print contrast
-        print saturation
-        print iso
+        print("error setting slides to new values")
+        print("here are current values")
+        print(width)
+        print(height)
+        print(sharpness)
+        print(brightness)
+        print(contrast)
+        print(saturation)
+        print(iso)
     return
 
 def reset_cam():
@@ -127,13 +129,13 @@ def reset_cam():
     contrast = 0                #Default = 0; range = (-100 to 100)
     saturation = 0              #Default = 0; range = (-100 to 100)
     iso = 400                   #Unknown Default; range = (100 to 800)
-    print "Default width:",width
-    print "Default height:",height
-    print "Default sharpness:",sharpness
-    print "Default brightness:",brightness
-    print "Default contrast:",contrast
-    print "Default saturation:",saturation
-    print "Default ISO:",iso
+    print("Default width:",width)
+    print("Default height:",height)
+    print("Default sharpness:",sharpness)
+    print("Default brightness:",brightness)
+    print("Default contrast:",contrast)
+    print("Default saturation:",saturation)
+    print("Default ISO:",iso)
     sys.stdout.flush()
     try:
         widthslide.set(width)
@@ -144,15 +146,15 @@ def reset_cam():
         saturationslide.set(saturation)
         isoslide.set(iso)
     except:
-        print "error setting slides to new values"
-        print "here are current values"
-        print width
-        print height
-        print sharpness
-        print brightness
-        print contrast
-        print saturation
-        print iso
+        print("error setting slides to new values")
+        print("here are current values")
+        print(width)
+        print(height)
+        print(sharpness)
+        print(brightness)
+        print(contrast)
+        print(saturation)
+        print(iso)
         sys.stdout.flush()
     return
     
@@ -171,7 +173,7 @@ def gen_checksum(data):
     return hashlib.md5(data).hexdigest()                            #Generates a 32 character hash up to 10000 char length String(for checksum). If string is too long I've notice length irregularities in checksum
 
 def sync():                                                         #This is module to ensure both sender and receiver at that the same point in their data streams to prevent a desync
-    print "Attempting to Sync - This should take approx. 2 sec"
+    print("Attempting to Sync - This should take approx. 2 sec")
     sync = ""
     addsync0 = ""
     addsync1 = ""
@@ -188,13 +190,13 @@ def sync():                                                         #This is mod
         addsync1 = addsync0
     sync = ""
     ser.write('S')                                                  #Notifies sender that the receiving end is now synced 
-    print "System Match"
+    print("System Match")
     ser.flushInput()
     ser.flushOutput()
     return
 
 def receive_image(savepath, wordlength):
-    print "confirmed photo request"                                 #Notifies User we have entered the receiveimage() module
+    print("confirmed photo request")                                 #Notifies User we have entered the receiveimage() module
     sys.stdout.flush()
     
     #Module Specific Variables
@@ -204,7 +206,7 @@ def receive_image(savepath, wordlength):
     
     #Retreive Data Loop (Will end when on timeout)
     while(done == False):
-        print "Current Recieve Position: ", str(len(finalstring))
+        print("Current Recieve Position: ", str(len(finalstring)))
         checktheirs = ""
         checktheirs = ser.read(32)                                  #Asks first for checksum. Checksum is asked for first so that if data is less than wordlength, it won't error out the checksum data
         word = ser.read(wordlength)                                 #Retreives characters, wholes total string length is predetermined by variable wordlength
@@ -215,9 +217,9 @@ def receive_image(savepath, wordlength):
             if(trycnt < 5):                                         #This line sets the maximum number of checksum resends. Ex. trycnt = 5 will attempt to rereceive data 5 times before erroring out                                              #I've found that the main cause of checksum errors is a bit drop or add desync, this adds a 2 second delay and resyncs both systems 
                 ser.write('N')
                 trycnt += 1
-                print "try number:", str(trycnt)
-                print "\tresend last"                                 #This line is mostly used for troubleshooting, allows user to view that both devices are at the same position when a checksum error occurs
-                print "\tpos @" , str(len(finalstring))
+                print("try number:", str(trycnt))
+                print("\tresend last")                              #This line is mostly used for troubleshooting, allows user to view that both devices are at the same position when a checksum error occurs
+                print("\tpos @" , str(len(finalstring)))
                 sys.stdout.flush()
                 sync()                                              #This corrects for bit deficits or excesses ######  THIS IS A MUST FOR DATA TRANSMISSION WITH THE RFD900s!!!! #####
             else:
@@ -239,11 +241,11 @@ def receive_image(savepath, wordlength):
         b64_to_image(finalstring,savepath)
         imagedisplay.set(savepath)
     except:
-        print "Error with filename, saved as newimage" + extension
+        print("Error with filename, saved as newimage" + extension)
         sys.stdout.flush()
         b64_to_image(finalstring,"newimage" + extension)            #Save image as newimage.jpg due to a naming error
     
-    print "Image Saved"
+    print("Image Saved")
     sys.stdout.flush()
 
 
@@ -254,7 +256,7 @@ def cmd1():     #Get Most Recent Photo
     global reim
     ser.write('1')
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         sys.stdout.flush()
         ser.write('1')
     #sync()
@@ -276,7 +278,7 @@ def cmd1():     #Get Most Recent Photo
     else:
         imagepath = imagepath+extension
             
-    print "Image will be saved as:", imagepath
+    print("Image will be saved as:", imagepath)
     tkMessageBox.showinfo("In Progress..",message = "Image request recieved.\nImage will be saved as "+imagepath)
     timecheck = time.time()
     sys.stdout.flush()
@@ -286,7 +288,7 @@ def cmd1():     #Get Most Recent Photo
     photo = ImageTk.PhotoImage(reim)
     tmplabel.configure(image = photo)
     tmplabel.pack(fill=BOTH,expand = 1)
-    print "Receive Time =", (time.time() - timecheck)
+    print("Receive Time =", (time.time() - timecheck))
     sys.stdout.flush()
     return
 
@@ -294,11 +296,11 @@ def cmd2():     #reguest imagedata.txt
     try:
         listbox.delete(0,END)
     except:
-        print "Failed to delete Listbox, window may have been destroyed"
+        print("Failed to delete Listbox, window may have been destroyed")
         sys.stdout.flush()
     ser.write('2')
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         sys.stdout.flush()
         ser.write('2')
     #sync()
@@ -308,7 +310,7 @@ def cmd2():     #reguest imagedata.txt
             datafilepath = "imagedata"
         file = open(datafilepath+".txt","w")
     except:
-        print "Error with opening file"
+        print("Error with opening file")
         sys.stdout.flush()
         return
     timecheck = time.time()
@@ -318,11 +320,11 @@ def cmd2():     #reguest imagedata.txt
         try:
             listbox.insert(0,temp)
         except:
-            print "error adding items"
+            print("error adding items")
             break
         temp = ser.readline()
     file.close()
-    print "File Recieved, Attempting Listbox Update"
+    print("File Recieved, Attempting Listbox Update")
     sys.stdin.flush()
     subGui.lift()
     subGui.mainloop()
@@ -337,17 +339,17 @@ def cmd3():     #reguest specific image
     try:
         data = listbox.get(ACTIVE)
     except:
-        print "Nothing Selected"
+        print("Nothing Selected")
         sys.stdout.flush()
         return
     data = data[0:15]
-    print data[10]
+    print(data[10])
     if (data[10] != 'b'):
         tkMessageBox.askquestion("W A R N I N G",message = "You have selected the high resolution image.\nAre you sure you want to continue?\nThis download could take 15+ min.",icon = "warning")
         if 'yes':
             ser.write('3')
             while (ser.read() != 'A'):
-                print "Waiting for Acknowledge"
+                print("Waiting for Acknowledge")
                 sys.stdout.flush()
                 ser.write('3')
             sync()
@@ -355,7 +357,7 @@ def cmd3():     #reguest specific image
             ser.write(data)
             timecheck = time.time()
             tkMessageBox.showinfo("In Progress...",message = "Image request recieved.\nImage will be saved as "+imagepath)
-            print "Image will be saved as:", imagepath
+            print("Image will be saved as:", imagepath)
             sys.stdout.flush()
             receive_image(str(imagepath), wordlength)
             im = PIL.Image.open(imagepath)
@@ -363,7 +365,7 @@ def cmd3():     #reguest specific image
             photo = ImageTk.PhotoImage(reim)
             tmplabel.configure(image = photo)
             tmplabel.pack(fill=BOTH,expand = 1)
-            print "Receive Time =", (time.time() - timecheck)
+            print("Receive Time =", (time.time() - timecheck))
             return
         else:
             return
@@ -371,7 +373,7 @@ def cmd3():     #reguest specific image
     else:
         ser.write('3')
         while (ser.read() != 'A'):
-            print "Waiting for Acknowledge"
+            print("Waiting for Acknowledge")
             sys.stdout.flush()
             ser.write('3')
         sync()
@@ -379,7 +381,7 @@ def cmd3():     #reguest specific image
         ser.write(data)
         timecheck = time.time()
         tkMessageBox.showinfo("In Progress...",message = "Image request recieved.\nImage will be saved as "+imagepath)
-        print "Image will be saved as:", imagepath
+        print("Image will be saved as:", imagepath)
         sys.stdout.flush()
         receive_image(str(imagepath), wordlength)
         im = PIL.Image.open(imagepath)
@@ -387,7 +389,7 @@ def cmd3():     #reguest specific image
         photo = ImageTk.PhotoImage(reim)
         tmplabel.configure(image = photo)
         tmplabel.pack(fill=BOTH,expand = 1)
-        print "Receive Time =", (time.time() - timecheck)
+        print("Receive Time =", (time.time() - timecheck))
         return
 
 def cmd4(): #Retrieve current settings
@@ -399,21 +401,21 @@ def cmd4(): #Retrieve current settings
     global saturation
     global iso
     global timeupdateflag
-    print "Retrieving Camera Settings"
+    print("Retrieving Camera Settings")
     try:
         killtime = time.time()+10
         ser.write('4')
         while ((ser.read() != 'A') & (time.time()<killtime)):
-            print "Waiting for Acknowledge"
+            print("Waiting for Acknowledge")
             ser.write('4')
         #sync()
         timecheck = time.time()
         #tkMessageBox.showinfo("In Progress..",message = "Downloading Settings")
         try:
             file = open("camerasettings.txt","w")
-            print "File Successfully Created"
+            print("File Successfully Created")
         except:
-            print "Error with opening file"
+            print("Error with opening file")
             sys.stdout.flush()
             return
         timecheck = time.time()
@@ -423,35 +425,35 @@ def cmd4(): #Retrieve current settings
             file.write(temp)
             temp = ser.read()
         file.close()
-        print "Receive Time =", (time.time() - timecheck)
+        print("Receive Time =", (time.time() - timecheck))
         sys.stdout.flush()
         file = open("camerasettings.txt","r")
         twidth = file.readline()             #Default = (650,450); range up to
         width = int(twidth)
-        print "width = ",width
+        print("width = ",width)
         theight = file.readline()             #Default = (650,450); range up to
         height = int(theight)
-        print "height = ",height
+        print("height = ",height)
         tsharpness = file.readline()              #Default  =0; range = (-100 to 100)
         sharpness = int(tsharpness)
-        print "sharpness = ",sharpness
+        print("sharpness = ",sharpness)
         tbrightness = file.readline()             #Default = 50; range = (0 to 100)
         brightness = int(brightness)
-        print "brightness = ", brightness
+        print("brightness = ", brightness)
         tcontrast = file.readline()               #Default = 0; range = (-100 to 100)
         contrast = int(tcontrast)
-        print "contrast = ",contrast
+        print("contrast = ",contrast)
         tsaturation = file.readline()             #Default = 0; range = (-100 to 100)
         saturation = int(tsaturation)
-        print "saturation = ",saturation
+        print("saturation = ",saturation)
         tiso = file.readline()                      #Unknown Default; range = (100 to 800)
         iso = int(tiso)
-        print "iso = ",iso
+        print("iso = ",iso)
         file.close()
         timeupdateflag = 1
         updateslider()
     except:
-        print "Camera Setting Retrieval Error"
+        print("Camera Setting Retrieval Error")
     return
 
 def cmd5():     #upload new settings
@@ -481,7 +483,7 @@ def cmd5():     #upload new settings
     
     ser.write('5')
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         #sys.stdin.flush()
         ser.write('5')
     #sync()
@@ -490,7 +492,7 @@ def cmd5():     #upload new settings
     try:
         file = open("camerasettings.txt","r")
     except:
-        print "Error with opening file"
+        print("Error with opening file")
         sys.stdout.flush()
         return
     timecheck = time.time()
@@ -501,41 +503,42 @@ def cmd5():     #upload new settings
     file.close()
     error = time.time()
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         sys.stdout.flush()
         if(error+10<time.time()):
-            print "Acknowledge not received"
+            print("Acknowledge not received")
             return
-    print "Send Time =", (time.time() - timecheck)
+    print("Send Time =", (time.time() - timecheck))
     sys.stdout.flush()
     return
 
 def time_sync():
     #ser.flushInput()
-    ser.write('T')
+#     ser.write('T')
     termtime = time.time() + 20
-    while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
-        ser.write('T')
+#     while (ser.read() != 'A'):
+    while ('A' != 'A'):
+        print("Waiting for Acknowledge")
+#         ser.write('T')
         if (termtime < time.time()):
-            print "No Acknowledge Recieved, Connection Error"
+            print("No Acknowledge Recieved, Connection Error")
             sys.stdout.flush()
             return
     localtime = str(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
-    rasptime = str(ser.readline())
-    print "##################################\nRaspb Time = %s\nLocal Time = %s\n##################################" % (rasptime,localtime)
+    rasptime = '450'#str(ser.readline())
+    print("##################################\nRaspb Time = %s\nLocal Time = %s\n##################################" % (rasptime,localtime))
     sys.stdin.flush()
-    connectiontest(10)
+#     connectiontest(10)
     return
 
 def connectiontest(numping):
     ser.write('6')
     termtime = time.time() + 20
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         ser.write('6')
         if (termtime < time.time()):
-            print "No Acknowledge Recieved, Connection Error"
+            print("No Acknowledge Recieved, Connection Error")
             sys.stdout.flush()
             return
     avg = 0
@@ -550,24 +553,24 @@ def connectiontest(numping):
             temp = ser.read()
             receivetime = time.time()
         if (receivetime == 0):
-            print "Connection Error, No return ping within 10 seconds"
+            print("Connection Error, No return ping within 10 seconds")
             ser.write('D')
             sys.stdout.flush()
             return
         else:
             temp = ""
             avg += receivetime - sendtime
-            #print (avg/x)
+            #print((avg/x)
     ser.write('D')
     avg = avg/numping
-    print "Ping Response Time = " + str(avg)[0:4] + " seconds"
+    print("Ping Response Time = " + str(avg)[0:4] + " seconds")
     sys.stdout.flush()
     return
 
 def cmd7():
     ser.write('7')
     while (ser.read() != 'A'):
-        print "Waiting for Acknowledge"
+        print("Waiting for Acknowledge")
         sys.stdout.flush()
         ser.write('7')
     #sync()
@@ -575,7 +578,7 @@ def cmd7():
     try:
         file = open("piruntimedata.txt","w")
     except:
-        print"Error with opening file"
+        print("Error with opening file")
         sys.stdout.flush()
         return
     timecheck = time.time()
@@ -586,19 +589,19 @@ def cmd7():
         file.write(temp)
         temp = ser.readline()
         if (termtime < time.time()):
-            print "Error recieving piruntimedata.txt"
+            print("Error recieving piruntimedata.txt")
             file.close()
             return
     file.close()
-    print "piruntimedata.txt saved to local folder"
-    print "Receive Time =", (time.time() - timecheck)
+    print("piruntimedata.txt saved to local folder")
+    print("Receive Time =", (time.time() - timecheck))
     sys.stdout.flush()
     return
 
 def enable_camera_a():
     ser.write('8')
     while (ser.read() != 'A'):
-        print 'Waiting for Acknowledge'
+        print('Waiting for Acknowledge')
         ser.write('8')
     timecheck = time.time()
     return
@@ -606,7 +609,7 @@ def enable_camera_a():
 def enable_camera_b():
     ser.write('9')
     while (ser.read() != 'A'):
-        print 'Waiting for Acknowledge'
+        print('Waiting for Acknowledge')
         ser.write('9')
     timecheck = time.time()
     return
@@ -614,7 +617,7 @@ def enable_camera_b():
 def enable_camera_c():
     ser.write('c')
     while (ser.read() != 'A'):
-        print 'Waiting for Acknowledge'
+        print('Waiting for Acknowledge')
         ser.write('c')
     timecheck = time.time()
     return
@@ -622,7 +625,7 @@ def enable_camera_c():
 def enable_camera_d():
     ser.write('d')
     while (ser.read() != 'A'):
-        print 'Waiting for Acknowledge'
+        print('Waiting for Acknowledge')
         ser.write('d')
     timecheck = time.time()
     return
@@ -685,12 +688,12 @@ sys.stdout = Unbuffered(sys.stdout)
 ##sys.stdout.close()
 ##sys.stdout = open("runtimedata.txt","a")
 mGui.geometry("1300x550+30+30")
-mGui.title("Montana Space Grant Consortium Borealis Program")
+mGui.title("SAVIOUR AerosPACE Program")
 
-mlabel = Label(text = "RFD900 Interface V7.0", fg = 'grey', font = "Verdana 10 bold")
+mlabel = Label(text = "RFD900 Interface V7.0", fg = 'grey', font = "Helvetica 10 bold")
 mlabel.pack()
 
-cmdtitle = Label(text = "Command Module", font = "Verdana 12 bold")
+cmdtitle = Label(text = "Command Module", font = "Helvetica 12 bold")
 cmdtitle.place(x=30,y=20)
 
 imagetitle = Label(textvariable = imagedisplay, font = "Verdana 12 bold")
@@ -699,9 +702,9 @@ imagetitle.place(x=300,y=20)
 
 frame = Frame(master = mGui,width =665,height=465,borderwidth = 5,bg="black",colormap="new")
 frame.place(x=295,y=45)
-im = PIL.Image.open("MSGC2.jpg")
+im = PIL.Image.open("Saviour.png")
 reim = im.resize((650,450),PIL.Image.ANTIALIAS)
-photo = ImageTk.PhotoImage(reim)
+photo = PIL.ImageTk.PhotoImage(reim)
 tmplabel = Label(master = frame,image = photo)
 tmplabel.pack(fill=BOTH,expand = 1)
 
@@ -872,24 +875,24 @@ runlistbox.pack(side=LEFT,fill=Y)
 rframe.place(x=10,y=165)
 
 def callback():
-    global runlistbox
-    global mGui
-    try:
-        runlistbox.delete(0,END)
-    except:
-        print "Failed to delete Listbox"
-    print str(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
-    sys.stdout.flush()
-    for line in reversed(list(open("runtimedata.txt"))):
-        runlistbox.insert(END,line.rstrip())
-    mGui.after(5000,callback)
+#     global runlistbox
+#     global mGui
+#     try:
+#         runlistbox.delete(0,END)
+#     except:
+#         print("Failed to delete Listbox")
+#     print(str(datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")))
+#     sys.stdout.flush()
+#     for line in reversed(list(open("runtimedata.txt"))):
+#         runlistbox.insert(END,line.rstrip())
+#     mGui.after(5000,callback)
     return
 
 def mGuicloseall():    
     subGui.destroy()
     mGui.destroy()
     ser.close()
-    print "Program Terminated"
+    print("Program Terminated")
     sys.stdout.close()
     return
 mGui.protocol('WM_DELETE_WINDOW',mGuicloseall)
